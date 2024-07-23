@@ -8,10 +8,12 @@ public class JFRThreadEventsDemo {
     // https://todd.ginsberg.com/post/java/virtual-thread-pinning/
     // https://bestsolution-at.github.io/jfr-doc/openjdk-18.html
 
+    // Todo: change ofPlatform -> ofVirtual
     Thread.ofPlatform().name("vt1").start(() -> {
       while (true) {
         try {
           synchronized (JFRThreadEventsDemo.class) {
+            // Pin the thread when it is virtual
             Thread.sleep(2000);
           }
         } catch (InterruptedException e) {
