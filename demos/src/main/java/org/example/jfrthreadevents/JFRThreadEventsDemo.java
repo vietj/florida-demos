@@ -9,7 +9,7 @@ public class JFRThreadEventsDemo {
     // https://bestsolution-at.github.io/jfr-doc/openjdk-18.html
 
     // Todo: change ofPlatform -> ofVirtual
-    Thread.ofPlatform().name("vt1").start(() -> {
+    Thread.ofVirtual().name("vt1").start(() -> {
       while (true) {
         try {
           synchronized (JFRThreadEventsDemo.class) {
