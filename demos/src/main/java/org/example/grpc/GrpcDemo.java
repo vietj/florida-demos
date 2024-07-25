@@ -1,5 +1,6 @@
 package org.example.grpc;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -14,12 +15,9 @@ import io.vertx.grpc.server.GrpcServerRequest;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 public class GrpcDemo {
-
-  public static <Req, Resp> GrpcServerRequest<Req, Resp> wrap(GrpcServerRequest<Buffer, Buffer> req, Context workerContext) {
-    throw new UnsupportedOperationException();
-  }
 
   private static Map<String, Future<String>> lookupMap = new ConcurrentHashMap<>();
 
@@ -47,7 +45,27 @@ public class GrpcDemo {
       vertx.eventBus().consumer("the-function-address", msg -> {
         GrpcServerRequest<Buffer, Buffer> req = unwrapOriginalGrpcRequest(msg);
         req.resume();
-        GrpcServerRequest<HelloRequest, HelloReply> wrapper = wrap(req, context);
+        GrpcServerRequest<HelloRequest, HelloReply> wrapper = new GrpcServerRequestForFunction<>(
+          req,
+          new Function<Buffer, HelloRequest>() {
+            @Override
+            public HelloRequest apply(Buffer buffer) {
+              try {
+                return HelloRequest.parseFrom(buffer.getBytes());
+              } catch (InvalidProtocolBufferException e) {
+                req.response().cancel();
+                throw new RuntimeException(e);
+              }
+            }
+          },
+          new Function<HelloReply, Buffer>() {
+            @Override
+            public Buffer apply(HelloReply helloReply) {
+              return Buffer.buffer(helloReply.toByteArray());
+            }
+          },
+          context // Context of the function that is a worker context (same as upload :-) )
+        );
         service.invoke_sayHello(wrapper);
       });
     }
