@@ -14,6 +14,9 @@ public class EventLoopPendingTasksDemo {
       Context ctx = vertx.getOrCreateContext();
       EventLoop nettyEventLoop = ((ContextInternal) ctx).nettyEventLoop();
       SingleThreadEventLoop nioEventLoop = (SingleThreadEventLoop) nettyEventLoop;
+
+      System.out.println("Number of registered channels " + nioEventLoop.registeredChannels());
+
       // Should be 0
       System.out.println("Pending tasks " + nioEventLoop.pendingTasks());
       ctx.runOnContext(v2 -> {
